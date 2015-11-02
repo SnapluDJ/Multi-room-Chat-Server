@@ -5,6 +5,7 @@ function login () {
 	if (id) {
 		$('#login').hide();
 		nickname = id;
+		
 	}
 }
 

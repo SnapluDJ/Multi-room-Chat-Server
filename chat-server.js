@@ -26,3 +26,11 @@ io.sockets.on("connection", function (socket) {
 		io.sockets.emit("message_to_client", {message:data["message"]}); //broadcast the message to other users
 	});
 });
+
+
+///////////////////////
+///////////////////////
+var uuid = require('node-uuid');
+var people = {};
+var rooms = {};
+var client = [];
