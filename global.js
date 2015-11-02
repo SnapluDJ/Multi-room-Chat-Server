@@ -1,11 +1,11 @@
-var nickname;
+var nickname = null;
 
 function login () {
 	var id = document.getElementById("nickname").value;
 	if (id) {
 		$('#login').hide();
 		nickname = id;
-		
+
 	}
 }
 
