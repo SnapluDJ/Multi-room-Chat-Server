@@ -55,6 +55,15 @@ textarea {
 	margin-bottom:30px;
 }
 
+img.close {
+	position:absolute;
+	right:-14px;
+	top:-14px;
+	cursor:pointer;
+	height: 30px;
+	width: 30px;
+}
+
 #loginSubmit{
 	text-decoration:none;
 	width:100%;
@@ -67,4 +76,9 @@ textarea {
 	font-size:20px;
 	cursor:pointer;
 	border-radius:5px;
+}
+
+#publicRoom, #privateRoom,
+#publicOrPrivateRoom{
+	display: none;
 }
