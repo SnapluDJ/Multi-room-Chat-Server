@@ -20,6 +20,17 @@ socket.on("connection", function (client) {
 	});
 
 	client.on("createRoom", function (name) {
-		
-	})
+		if (people[client.id].room === null) {
+			var id = uuid.v4();
+			var room = new Room(name, id, client.id);
+			rooms[id] = room;
+			socket.sockets.emit("roomList", {rooms: rooms}); //update the list of rooms on the frontend
+			client.room = name; //name the room
+			client.join(client.room); //auto-join the creator to the room
+			room.addPerson(client.id); //add the person to the room object
+			people[client.id].room = id; //update the room key with the ID of the created room	
+		}else{
+			socket.sockets.emit("update", "You have already created a room.");
+		}
+	});
 });
