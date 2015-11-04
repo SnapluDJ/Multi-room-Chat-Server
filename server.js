@@ -1,3 +1,19 @@
+function People (nickname) {
+	this.name = nickname;
+	this.createRoom = ture;
+
+}
+
+function Room (roomName, password, owner, roomId) {
+	this.name = roomName;
+	this.password = password;
+	this.owner = owner;
+	this.id = roomId;
+	var peopleList = [];
+}
+
+
+
 var http = require("http"),
 	socketio = require("socket.io"),
 	fs = require("fs");
@@ -24,11 +40,12 @@ io.sockets.on("connection", function (socket) {
 		var newRoom = new Room(roomName, password, owner, roomId);
 		roomList.push(newRoom.name);
 
+		console.log("newRoom: " + roomName + " " + owner);
 		io.sockets.emit("updateRoomList", roomList);
 	});
 
-	socket.on("", function () {
-		
+	socket.on("loadRoomList", function () {
+		io.sockets.emit("updateRoomList", roomList);
 	});
 })
 
