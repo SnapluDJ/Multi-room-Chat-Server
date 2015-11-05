@@ -41,11 +41,11 @@ io.sockets.on("connection", function (socket) {
 		roomList.push(newRoom.name);
 
 		console.log("newRoom: " + roomName + " " + owner);
-		io.sockets.emit("updateRoomList", roomList);
+		io.sockets.emit("updateRoomList", roomList, roomId);
 	});
 
 	socket.on("loadRoomList", function () {
-		io.sockets.emit("updateRoomList", roomList);
+		io.sockets.emit("updateRoomList", roomList, roomId);
 	});
 })
 

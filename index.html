@@ -3,7 +3,8 @@
 	<head>
 		<title>Chat Room</title>
 		<style type="text/css">
-			#login{
+			#login, #publicOrPrivateRoom,
+			#publicRoom, #privateRoom{
 				width:100%;
 				height:100%;
 				opacity:.95;
@@ -60,16 +61,9 @@
 				margin-bottom:30px;
 			}
 
-			img.close {
-				position:absolute;
-				right:-14px;
-				top:-14px;
-				cursor:pointer;
-				height: 30px;
-				width: 30px;
-			}
-
-			#loginSubmit{
+			#loginSubmit, #cancelCreateRoom,
+			#createPublicRoomSubmit, #createPrivateRoomSubmit,
+			#choosePublic, #choosePrivate{
 				text-decoration:none;
 				width:100%;
 				text-align:center;
@@ -84,8 +78,25 @@
 			}
 
 			#publicRoom, #privateRoom,
-			#publicOrPrivateRoom{
+			#publicOrPrivateRoom,
+			#publicChattingWindow, #privateChattingWindow{
 				display: none;
+			}
+
+			button{
+				font-style: italic;	
+				background-color: #CFA25E;
+			    color: #fff;
+			    border-radius: 7px;
+			    font-size: 75%;
+			}
+
+			a:link {
+  				color: #445;
+			}
+
+			a:hover {
+			  color: #667;
 			}
 		</style>
 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
@@ -94,6 +105,7 @@
 	</head>
 
 	<body>
+		<h1>Current Available Room:</h1>
 		<!-- Login window -->
 		<div id="login">
 			<div class="popupContent">
@@ -154,6 +166,22 @@
 			</div>
 		</div>
 
+		<!-- Public chatting window -->
+		<div id="publicChattingWindow">
+			<input type="text" id="publicMessageInput" />
+			<button id="publicSend">Send</button>
+			<div id="publicChatlog"></div>
+			<button id="publicChattingClose">Close</button>
+		</div>
+
+		<!-- Private chatting window -->
+		<div id="privateChattingWindow">
+			<input type="text" id="privateMessageInput" />
+			<button id="privateSend">Send</button>
+			<div id="privateChatlog"></div>
+			<button id="privateChattingCLose">Close</button>
+		</div>
+
 		<!-- Javascript code of client -->
 		<script>
 			var nickname = null;
@@ -174,11 +202,12 @@
 			/////////////////
 			var socketio = io.connect();
 
-			socketio.on("updateRoomList", function (roomList) {
+			socketio.on("updateRoomList", function (roomList, roomId) {
 				$('#chatRoomList').empty();
 				for (var i = 0; i < roomList.length; i++) {
 					var display = document.getElementById("chatRoomList");
 					display.innerHTML += '<a href="javascript:void(0)">' + roomList[i] + '</a>';
+					display.innerHTML += '<button id="' + roomId + '">Join</button>';
 					display.innerHTML += '<br/>';
 				}
 			});
@@ -221,10 +250,12 @@
 				var publicRoomName = document.getElementById("publicRoomName").value;
 				var password = null;
 				var owner = nickname;
-
-				alert(publicRoomName);
-				alert(owner);
 				socketio.emit("createRoom", publicRoomName, password, owner);	
+
+				$('#createRoom').hide();
+				$('#chatRoomList').hide();
+				$('h1').hide();
+				$('#publicChattingWindow').show();
 			}
 
 			function privateRoomConfirm () {
@@ -233,8 +264,12 @@
 				var privateRoomName = document.getElementById("privateRoomName").value;
 				var password = document.getElementById("password").value;
 				var owner = nickname;
-
 				socketio.emit("createRoom", publicOrPrivateRoom, password, owner);
+
+				$('#createRoom').hide();
+				$('#chatRoomList').hide();
+				$('h1').hide();
+				$('#publicChattingWindow').show();
 			}
 
 			document.getElementById("createPublicRoomSubmit").addEventListener("click", publicRoomConfirm);
