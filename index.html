@@ -119,9 +119,7 @@
 		</div>
 
 		<!-- Current available chat room -->
-		<div id="chatRoomList">
-			<p>Room List</p>
-		</div>
+		<div id="chatRoomList"></div>
 
 		<!-- Create room button -->
 		<button id="createRoom">Create Chat Room</button>
@@ -172,6 +170,7 @@
 			<button id="publicSend">Send</button>
 			<div id="publicChatlog"></div>
 			<button id="publicChattingClose">Close</button>
+			<div id="publicPeopleList"></div>
 		</div>
 
 		<!-- Private chatting window -->
@@ -180,6 +179,7 @@
 			<button id="privateSend">Send</button>
 			<div id="privateChatlog"></div>
 			<button id="privateChattingCLose">Close</button>
+			<div id="privatePeopleList"></div>
 		</div>
 
 		<!-- Javascript code of client -->
@@ -206,12 +206,26 @@
 				$('#chatRoomList').empty();
 				for (var i = 0; i < roomList.length; i++) {
 					var display = document.getElementById("chatRoomList");
-					display.innerHTML += '<a href="javascript:void(0)">' + roomList[i] + '</a>';
-					display.innerHTML += '<button id="' + roomId + '">Join</button>';
+					display.innerHTML += '<a href="javascript:void(0)" id="' + roomId + '">' + roomList[i] + '</a>';
 					display.innerHTML += '<br/>';
 				}
 			});
 
+			socketio.on("showOwner", function (peopleList, flag) {
+				if (flag == "public") {
+					var display = document.getElementById("publicPeopleList");
+					for (var i = 0; i < peopleList.length; i++) {
+						display.innerHTML += '<a href="javascript:void(0)">' + peopleList[i] + '</a>';	
+						display.innerHTML += '<br/>';
+					}
+				}else{
+					var display = document.getElementById("privatePeopleList");
+					for (var i = 0; i < peopleList.length; i++) {
+						display.innerHTML += '<a href="javascript:void(0)">' + peopleList[i] + '</a>';	
+						display.innerHTML += '<br/>';
+					}
+				}
+			});
 			/////////////////
 
 
@@ -235,7 +249,7 @@
 			}
 
 			function cancelCreateRoom () {
-				$('#cancelCreateRoom').hide();
+				$('#publicOrPrivateRoom').hide();
 			}
 
 			document.getElementById("choosePublic").addEventListener("click", publicRoom, false);
@@ -264,7 +278,7 @@
 				var privateRoomName = document.getElementById("privateRoomName").value;
 				var password = document.getElementById("password").value;
 				var owner = nickname;
-				socketio.emit("createRoom", publicOrPrivateRoom, password, owner);
+				socketio.emit("createRoom", privateRoomName, password, owner);
 
 				$('#createRoom').hide();
 				$('#chatRoomList').hide();

@@ -9,8 +9,14 @@ function Room (roomName, password, owner, roomId) {
 	this.password = password;
 	this.owner = owner;
 	this.id = roomId;
-	var peopleList = [];
+	this.people = function (newPerson) {
+		var peopleList = [];
+		peopleList.push(newPerson);
+		return peopleList;
+	}
+	
 }
+
 
 
 
@@ -40,13 +46,21 @@ io.sockets.on("connection", function (socket) {
 		var newRoom = new Room(roomName, password, owner, roomId);
 		roomList.push(newRoom.name);
 
-		console.log("newRoom: " + roomName + " " + owner);
 		io.sockets.emit("updateRoomList", roomList, roomId);
+
+		if (password != null) {
+			io.sockets.emit("showOwner", newRoom.people(owner), "private");
+		}else{
+			io.sockets.emit("showOwner", newRoom.people(owner), "public");
+		}
+		
 	});
 
 	socket.on("loadRoomList", function () {
 		io.sockets.emit("updateRoomList", roomList, roomId);
 	});
+
+	
 })
 
 
