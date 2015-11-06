@@ -79,9 +79,22 @@ io.sockets.on("connection", function (socket) {
 		for (var i = 0; i < roomArray.length; i++) {
 			if (roomArray[i].id == roomId) {
 				if (roomStatus == "public") {
-					io.sockets.emit("updatePeopleList", roomArray[i].people(nickname), "public");
+					io.sockets.emit("updatePeopleList", roomArray[i].people(nickname), "public", roomId);
 				}else{
-					io.sockets.emit("updatePeopleList", roomArray[i].people(nickname), "private");
+					io.sockets.emit("updatePeopleList", roomArray[i].people(nickname), "private", roomId);
+				}
+				break;
+			}
+		}
+	});
+
+	socket.on("checkPassword", function (password, roomId) {
+		for (var i = 0; i < roomArray.length; i++) {
+			if (roomArray[i].id == roomId) {
+				if (roomArray[i].password == password) {
+					io.sockets.emit("passwordFeedback", "correct");
+				}else{
+					io.sockets.emit("passwordFeedback", "wrong");
 				}
 				break;
 			}
