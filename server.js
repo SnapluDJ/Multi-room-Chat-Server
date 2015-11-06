@@ -51,9 +51,9 @@ io.sockets.on("connection", function (socket) {
 		io.sockets.emit("updateRoomList", roomList, roomId);
 
 		if (password != null) {
-			io.sockets.emit("updatePeopleList", newRoom.people(owner), "private");
+			io.sockets.emit("updatePeopleList", newRoom.people(owner), "private", roomId);
 		}else{
-			io.sockets.emit("updatePeopleList", newRoom.people(owner), "public");
+			io.sockets.emit("updatePeopleList", newRoom.people(owner), "public", roomId);
 		}
 		
 	});
