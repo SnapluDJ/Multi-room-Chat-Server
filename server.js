@@ -1,8 +1,8 @@
-function People (nickname) {
-	this.name = nickname;
-	this.createRoom = ture;
+// function People (nickname) {
+// 	this.name = nickname;
+// 	this.createRoom = ture;
 
-}
+// }
 
 function Room (roomName, password, owner, roomId) {
 	this.name = roomName;
@@ -37,6 +37,7 @@ app.listen(3456);
 
 var roomList = [];
 var roomId = 0;
+var roomArray = [];
 
 var io = socketio.listen(app);
 io.sockets.on("connection", function (socket) {
@@ -44,14 +45,15 @@ io.sockets.on("connection", function (socket) {
 	socket.on("createRoom", function (roomName, password, owner) {
 		++roomId;
 		var newRoom = new Room(roomName, password, owner, roomId);
+		roomArray.push(newRoom);
 		roomList.push(newRoom.name);
 
 		io.sockets.emit("updateRoomList", roomList, roomId);
 
 		if (password != null) {
-			io.sockets.emit("showOwner", newRoom.people(owner), "private");
+			io.sockets.emit("updatePeopleList", newRoom.people(owner), "private");
 		}else{
-			io.sockets.emit("showOwner", newRoom.people(owner), "public");
+			io.sockets.emit("updatePeopleList", newRoom.people(owner), "public");
 		}
 		
 	});
@@ -60,7 +62,31 @@ io.sockets.on("connection", function (socket) {
 		io.sockets.emit("updateRoomList", roomList, roomId);
 	});
 
-	
+	socket.on("checkPublicOrPrivate", function (roomId) {
+		for (var i = 0; i < roomArray.length; i++) {
+			if (roomArray[i].id == roomId) {
+				if (roomArray[i].password == null) {
+					io.sockets.emit("roomStatus", "public");
+				}else{
+					io.sockets.emit("roomStatus", "private");
+				}
+				break;
+			}
+		}
+	});
+
+	socket.on("loadPeopleList", function (nickname, roomId, roomStatus) {
+		for (var i = 0; i < roomArray.length; i++) {
+			if (roomArray[i].id == roomId) {
+				if (roomStatus == "public") {
+					io.sockets.emit("updatePeopleList", roomArray[i].people(nickname), "public");
+				}else{
+					io.sockets.emit("updatePeopleList", roomArray[i].people(nickname), "private");
+				}
+				break;
+			}
+		}
+	});
 })
 
 

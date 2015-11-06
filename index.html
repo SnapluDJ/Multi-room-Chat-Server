@@ -79,7 +79,8 @@
 
 			#publicRoom, #privateRoom,
 			#publicOrPrivateRoom,
-			#publicChattingWindow, #privateChattingWindow{
+			#publicChattingWindow, #privateChattingWindow,
+			#privateRoomPasswordWindow{
 				display: none;
 			}
 
@@ -164,7 +165,7 @@
 			</div>
 		</div>
 
-		<!-- Public chatting window -->
+		<!-- Public room window -->
 		<div id="publicChattingWindow">
 			<input type="text" id="publicMessageInput" />
 			<button id="publicSend">Send</button>
@@ -173,13 +174,26 @@
 			<div id="publicPeopleList"></div>
 		</div>
 
-		<!-- Private chatting window -->
+		<!-- Private room window -->
 		<div id="privateChattingWindow">
 			<input type="text" id="privateMessageInput" />
 			<button id="privateSend">Send</button>
 			<div id="privateChatlog"></div>
 			<button id="privateChattingCLose">Close</button>
 			<div id="privatePeopleList"></div>
+		</div>
+
+		<!-- Password window to join private room -->
+		<div id="privateRoomPasswordWindow">
+			<div class="popupContent">
+				<form action="#" method="POST">
+					<h2>Type Password</h2>
+					<h3>It's a Private Room</h3>
+					<hr>
+					<textarea id="privateRoomPassword" placeholder="password" required="required"></textarea>
+					<a href="javascript:void(0)" id="passwordSubmit">Confirm</a>
+				</form>
+			</div>
 		</div>
 
 		<!-- Javascript code of client -->
@@ -200,18 +214,20 @@
 
 
 			/////////////////
+
 			var socketio = io.connect();
 
 			socketio.on("updateRoomList", function (roomList, roomId) {
 				$('#chatRoomList').empty();
 				for (var i = 0; i < roomList.length; i++) {
 					var display = document.getElementById("chatRoomList");
-					display.innerHTML += '<a href="javascript:void(0)" id="' + roomId + '">' + roomList[i] + '</a>';
+					display.innerHTML += '<a href="javascript:void(0)" id="' + roomId + '" class="room">' + roomList[i] + '</a>';
 					display.innerHTML += '<br/>';
+					addEventListenerToRoom();
 				}
 			});
 
-			socketio.on("showOwner", function (peopleList, flag) {
+			socketio.on("updatePeopleList", function (peopleList, flag) {
 				if (flag == "public") {
 					var display = document.getElementById("publicPeopleList");
 					for (var i = 0; i < peopleList.length; i++) {
@@ -226,9 +242,29 @@
 					}
 				}
 			});
+
 			/////////////////
+			function addEventListenerToRoom () {
+				var roomArray = document.getElementsByClassName("room");
+				for (var i = 0; i < roomArray.length; i++) {
+					roomArray[i].addEventListener("click", function () {joinRoom(roomArray[i].id);}, false);
+				}	
+			}
 
-
+			function joinRoom (roomId) {
+				socketio.emit("checkPublicOrPrivate", roomId);
+				socketio.on("roomStatus", function (roomStatus) {
+					if (roomStatus == "private") {
+						$('#privateRoomPasswordWindow').show();
+					}else{
+						$('#createRoom').hide();
+						$('#chatRoomList').hide();
+						$('h1').hide();
+						$('#publicChattingWindow').show();	
+						socketio.emit("loadPeopleList", nickname, roomId, "public");
+					}
+				});
+			}
 
 			function createRoom () {
 				$('#publicOrPrivateRoom').show();
@@ -258,7 +294,7 @@
 
 
 			//////////////////
-			function publicRoomConfirm () {
+			function createPublicRoom () {
 				$('#publicRoom').hide();
 
 				var publicRoomName = document.getElementById("publicRoomName").value;
@@ -272,7 +308,7 @@
 				$('#publicChattingWindow').show();
 			}
 
-			function privateRoomConfirm () {
+			function createPrivateRoom () {
 				$('#privateRoom').hide();
 
 				var privateRoomName = document.getElementById("privateRoomName").value;
@@ -286,8 +322,29 @@
 				$('#publicChattingWindow').show();
 			}
 
-			document.getElementById("createPublicRoomSubmit").addEventListener("click", publicRoomConfirm);
-			document.getElementById("createPrivateRoomSubmit").addEventListener("click", privateRoomConfirm);
+			document.getElementById("createPublicRoomSubmit").addEventListener("click", createPublicRoom);
+			document.getElementById("createPrivateRoomSubmit").addEventListener("click", createPrivateRoom);
+
+			
+			/////////////////////
+			function quitPublicRoom () {
+				
+			}
+
+			function quitPrivateRoom () {
+				
+			}
+
+			document.getElementById("publicChattingClose").addEventListener("click", quitPublicRoom, false);
+			document.getElementById("privateChattingCLose").addEventListener("click", quitPrivateRoom, false);
+			///////////////////////////////////////
+
+			function joinPrivateRoom () {
+				
+			}
+
+			document.getElementById("passwordSubmit").addEventListener("click", joinPrivateRoom, false);
+			/////////////
 
 		</script>
 	</body>
