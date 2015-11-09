@@ -197,52 +197,11 @@
 			</div>
 		</div>
 
+		<!-- Javascript code of client -->
 		<script>
 			var nickname = null;
 			var currentRoomId;
-			var identityToUpdatePeopleList;
-			var identityToUpdateContent;
 
-			//////////////////////
-			///Listen to Server///
-			//////////////////////
-			var socketio = io.connect();
-
-			socketio.on("updateRoomList", function (roomList, roomId) {
-				$('#chatRoomList').empty();
-				for (var i = 0; i < roomList.length; i++) {
-					var display = document.getElementById("chatRoomList");
-					display.innerHTML += '<a href="javascript:void(0)" id="' + roomId + '" class="room">' + roomList[i] + '</a>';
-					display.innerHTML += '<br/>';
-				}
-				addEventListenerToRoom();
-			});
-
-			socketio.on("currentRoom", function (roomId) {
-				currentRoomId = roomId;
-				identityToUpdatePeopleList = "updatePeopleList" + currentRoomId.toString();
-			});
-
-			socketio.on(identityToUpdatePeopleList, function (peopleList, flag) {
-				if (flag == "public") {
-					$('#publicPeopleList').empty();
-					var display = document.getElementById("publicPeopleList");
-					for (var i = 0; i < peopleList.length; i++) {
-						display.innerHTML += '<a href="javascript:void(0)">' + peopleList[i] + '</a>';	
-						display.innerHTML += '<br/>';
-					}
-				}else{
-					$('#privatePeopleList').empty();
-					var display = document.getElementById("privatePeopleList");
-					for (var i = 0; i < peopleList.length; i++) {
-						display.innerHTML += '<a href="javascript:void(0)">' + peopleList[i] + '</a>';	
-						display.innerHTML += '<br/>';
-					}
-				}
-			});
-
-
-			//Login once load the page
 			function login () {
 				var id = document.getElementById("nickname").value;
 				if (id) {
@@ -256,11 +215,122 @@
 
 
 
-			//Some window hide and show stuff
+			/////////////////
+
+			var socketio = io.connect();
+
+			socketio.on("updateRoomList", function (roomList, roomId) {
+				$('#chatRoomList').empty();
+				for (var i = 0; i < roomList.length; i++) {
+					var display = document.getElementById("chatRoomList");
+					display.innerHTML += '<a href="javascript:void(0)" id="' + roomId + '" class="room">' + roomList[i] + '</a>';
+					display.innerHTML += '<br/>';
+					addEventListenerToRoom();
+				}
+			});
+
+			socketio.on("currentRoom", function (roomId) {
+				currentRoomId = roomId;
+			});
+
+			socketio.on("showOwner", function (peopleList, flag, roomId) {
+				if (roomId == currentRoomId) {
+					if (flag == "public") {
+						$('#publicPeopleList').empty();
+						var display = document.getElementById("publicPeopleList");
+						for (var i = 0; i < peopleList.length; i++) {
+							display.innerHTML += '<a href="javascript:void(0)">' + peopleList[i] + '</a>';	
+							display.innerHTML += '<br/>';
+						}
+					}else{
+						$('#privatePeopleList').empty();
+						var display = document.getElementById("privatePeopleList");
+						for (var i = 0; i < peopleList.length; i++) {
+							display.innerHTML += '<a href="javascript:void(0)">' + peopleList[i] + '</a>';	
+							display.innerHTML += '<br/>';
+						}
+					}
+				}
+
+				
+			});
+
+			socketio.on("updatePeopleList", function (peopleList, flag, roomId) {
+				if (roomId == currentRoomId) {
+					if (flag == "public") {
+						$('#publicPeopleList').empty();
+						var display = document.getElementById("publicPeopleList");
+						for (var i = 0; i < peopleList.length; i++) {
+							display.innerHTML += '<a href="javascript:void(0)">' + peopleList[i] + '</a>';	
+							display.innerHTML += '<br/>';
+						}
+					}else{
+						$('#privatePeopleList').empty();
+						var display = document.getElementById("privatePeopleList");
+						for (var i = 0; i < peopleList.length; i++) {
+							display.innerHTML += '<a href="javascript:void(0)">' + peopleList[i] + '</a>';	
+							display.innerHTML += '<br/>';
+						}
+					}
+				}			
+			});
+
+			/////////////////
+			function addEventListenerToRoom () {
+				var roomArray = document.getElementsByClassName("room");
+				for (var i = 0; i < roomArray.length; i++) {
+					roomArray[i].addEventListener("click", function () {joinRoom(roomArray[i].id);}, false);
+				}	
+			}
+
+			
+			function joinRoom (roomId) {
+				socketio.emit("checkPublicOrPrivate", roomId);
+				socketio.on("roomStatus", function (roomStatus) {
+					if (roomStatus == "private") {
+						currentRoomId = roomId;
+						$('#privateRoomPasswordWindow').show();
+					}else{
+						currentRoomId = roomId;
+						$('#createRoom').hide();
+						$('#chatRoomList').hide();
+						$('h1').hide();
+						$('#publicChattingWindow').show();	
+						socketio.emit("loadPeopleList", nickname, roomId, "public");
+					}
+				});
+			}
+
+			function joinPrivateRoom () {
+				var password = document.getElementById("privateRoomPassword").value;
+				socketio.emit("checkPassword", password, currentRoomId);
+				socketio.on("passwordFeedback", function (flag) {
+					if (flag == "correct") {
+						$('#privateRoomPasswordWindow').hide();
+						$('#createRoom').hide();
+						$('#chatRoomList').hide();
+						$('h1').hide();
+						$('#privateChattingWindow').show();	
+						socketio.emit("loadPeopleList", nickname, currentRoomId, "private");
+					}else{
+						alert("Incorrect Password!");
+					}
+				});
+			}
+
+			document.getElementById("passwordSubmit").addEventListener("click", joinPrivateRoom, false);
+
+
+
+
 			function createRoom () {
 				$('#publicOrPrivateRoom').show();
 			}
 
+			document.getElementById("createRoom").addEventListener("click", createRoom, false);
+
+
+			////////////////////////
 			function publicRoom () {
 				$('#publicOrPrivateRoom').hide();
 				$('#publicRoom').show();
@@ -279,15 +349,13 @@
 				$('#privateRoomPasswordWindow').hide();
 			}
 
-			document.getElementById("createRoom").addEventListener("click", createRoom, false);
 			document.getElementById("choosePublic").addEventListener("click", publicRoom, false);
 			document.getElementById("choosePrivate").addEventListener("click", privateRoom, false);
 			document.getElementById("cancelCreateRoom").addEventListener("click", cancelCreateRoom, false);
 			document.getElementById("cancelPassword").addEventListener("click", cancelPassword, false);
 
 
-
-			//Create public room or private room
+			//////////////////
 			function createPublicRoom () {
 				$('#publicRoom').hide();
 
@@ -311,7 +379,7 @@
 				$('#createRoom').hide();
 				$('#chatRoomList').hide();
 				$('h1').hide();
-				$('#privateChattingWindow').show();
+				$('#publicChattingWindow').show();
 
 				socketio.emit("createRoom", privateRoomName, password, owner);
 			}
@@ -319,59 +387,22 @@
 			document.getElementById("createPublicRoomSubmit").addEventListener("click", createPublicRoom);
 			document.getElementById("createPrivateRoomSubmit").addEventListener("click", createPrivateRoom);
 
-
-
-			//Add event listener to every existing room
-			function addEventListenerToRoom () {
-				var roomArray = document.getElementsByClassName("room");
-				for (var i = 0; i < roomArray.length; i++) {
-					roomArray[i].addEventListener("click", function () {joinRoom(roomArray[i].id);}, false);
-				}	
+			
+			/////////////////////
+			function quitPublicRoom () {
+				
 			}
 
-
-
-			//Join public room or popup password window to join private room
-			function joinRoom (roomId) {
-				socketio.emit("checkPublicOrPrivate", roomId);
-				socketio.on("roomStatus", function (roomStatus) {
-					if (roomStatus == "private") {
-						currentRoomId = roomId;
-						identityToUpdatePeopleList = "updatePeopleList" + currentRoomId.toString();
-						$('#privateRoomPasswordWindow').show();
-					}else{
-						currentRoomId = roomId;
-						identityToUpdatePeopleList = "updatePeopleList" + currentRoomId.toString();
-						$('#createRoom').hide();
-						$('#chatRoomList').hide();
-						$('h1').hide();
-						$('#publicChattingWindow').show();	
-						socketio.emit("loadPeopleList", nickname, roomId, "public");
-					}
-				});
+			function quitPrivateRoom () {
+				
 			}
 
+			document.getElementById("publicChattingClose").addEventListener("click", quitPublicRoom, false);
+			document.getElementById("privateChattingCLose").addEventListener("click", quitPrivateRoom, false);
+			///////////////////////////////////////
 
 
-			//Join private room
-			function joinPrivateRoom () {
-				var password = document.getElementById("privateRoomPassword").value;
-				socketio.emit("checkPassword", password, currentRoomId);
-				socketio.on("passwordFeedback", function (flag) {
-					if (flag == "correct") {
-						$('#privateRoomPasswordWindow').hide();
-						$('#createRoom').hide();
-						$('#chatRoomList').hide();
-						$('h1').hide();
-						$('#privateChattingWindow').show();	
-						socketio.emit("loadPeopleList", nickname, currentRoomId, "private");
-					}else{
-						alert("Incorrect Password!");
-					}
-				});
-			}
-
-			document.getElementById("passwordSubmit").addEventListener("click", joinPrivateRoom, false);
+			/////////////
 
 		</script>
 	</body>
